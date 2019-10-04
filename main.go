@@ -8,11 +8,11 @@ import (
 
 	"github.com/atotto/clipboard"
 
+	"github.com/macroblock/imed/pkg/zlog/zlog"
+	"github.com/macroblock/imed/pkg/zlog/zlogger"
 	"github.com/macroblock/rawin"
 
 	"github.com/macroblock/cpbftpchk/xftp"
-	"github.com/macroblock/zl/core/zlog"
-	"github.com/macroblock/zl/core/zlogger"
 )
 
 var (
@@ -77,20 +77,20 @@ func formatEntry(entry *xftp.TEntry) string {
 	return fmt.Sprintf("%v|%v|%v", entry.Time.Format("2006-01-02 15:04"), formatSize(entry.Size), entry.Name)
 }
 
-func reloadList(path string) {
+func reloadList(opt *xftp.TConnStruct) {
 	log.Info("reading remote directory...")
-	list, err := ftp.List(path)
+	list, err := ftp.List(opt.Path)
 	if err != nil {
 		log.Warning(true, "lost connection")
 		log.Info("reconnecting...")
 		log.Warning(ftp.Quit(), "ftp.Quit()")
-		ftp, err = xftp.New(args)
+		ftp, err = xftp.New(*opt)
 		if err != nil {
 			log.Error(err, "xftp.New()")
 			return
 		}
 		log.Info("reading remote directory...")
-		list, err = ftp.List(path)
+		list, err = ftp.List(opt.Path)
 		if err != nil {
 			log.Error(err, "ftp.List()")
 			return
@@ -139,7 +139,14 @@ func main() {
 	if len(os.Args) > 1 {
 		args = os.Args[1]
 	}
+	// opt, err := xftp.ParseConnString(args)
+
+	log.Info("initializing...")
 	opt, err := xftp.ParseConnString(args)
+	if err != nil {
+		log.Error(err, "xftp.ParseConnString()")
+		return
+	}
 
 	err = rawin.Start()
 	defer rawin.Stop()
@@ -160,7 +167,7 @@ func main() {
 			busy = true
 			refreshTime = time.Now()
 			log.Info("-------------------------------------------------")
-			reloadList(opt.Path)
+			reloadList(opt)
 			printStat(opt)
 			busy = false
 		}
@@ -178,7 +185,7 @@ func main() {
 			if time.Since(refreshTime) >= refreshPeriod {
 				refreshTime = time.Now()
 				log.Info("-------------------------------------------------")
-				reloadList(opt.Path)
+				reloadList(opt)
 				printStat(opt)
 			}
 			process(ftp, opt)
@@ -190,7 +197,7 @@ func main() {
 	})
 
 	log.Info("connecting...")
-	ftp, err = xftp.New(args)
+	ftp, err = xftp.New(*opt)
 	if err != nil {
 		log.Error(err, "xftp.New()")
 		log.Warning(true, "format:")
@@ -199,7 +206,7 @@ func main() {
 	}
 	defer ftp.Quit()
 
-	reloadList(opt.Path)
+	reloadList(opt)
 	printStat(opt)
 
 	busy = false

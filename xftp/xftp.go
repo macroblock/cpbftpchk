@@ -6,7 +6,10 @@ import (
 	"log"
 	"net"
 	"strings"
+	"syscall"
 	"time"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/jlaffaye/ftp"
 	"github.com/macroblock/imed/pkg/ptool"
@@ -68,14 +71,11 @@ func init() {
 }
 
 // New -
-// conn: user:pswd@proto://host/path:port
-// proto - currently ftp or sftp only
-// all fields are necessary
-func New(conn string) (IFtp, error) {
-	cs, err := ParseConnString(conn)
-	if err != nil {
-		return nil, err
-	}
+func New(cs TConnStruct) (IFtp, error) {
+	// cs, err := ParseConnString(conn)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	addr := cs.Host + ":" + cs.Port
 	switch cs.Proto {
 	default:
@@ -161,6 +161,9 @@ type TConnStruct struct {
 }
 
 // ParseConnString -
+// conn: user:pswd@proto://host/path:port
+// proto - currently ftp or sftp only
+// all fields are necessary
 func ParseConnString(conn string) (*TConnStruct, error) {
 	cs := TConnStruct{}
 	tree, err := urlParser.Parse(conn)
@@ -189,8 +192,19 @@ func ParseConnString(conn string) (*TConnStruct, error) {
 			cs.Port = "22"
 		}
 	}
+
 	if cs.Host == "" {
-		return nil, fmt.Errorf("host name is emty")
+		return nil, fmt.Errorf("host name is empty")
+	}
+
+	if cs.Password == "" && cs.Username != "" {
+		fmt.Print("Enter Password: ")
+		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return nil, err
+		}
+		// fmt.Println("\nPassword typed: " + string(bytePassword))
+		cs.Password = string(bytePassword)
 	}
 	return &cs, nil
 }
