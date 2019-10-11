@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 
 	"github.com/pkg/sftp"
 )
@@ -15,16 +14,16 @@ type TSftp struct {
 	cwd    string
 }
 
-func (o *TSftp) resolveDir(dir string) string {
-	if path.IsAbs(dir) {
-		return path.Clean(dir)
-	}
-	return path.Join(o.cwd, dir)
-}
+// func (o *TSftp) resolveDir(dir string) string {
+// 	if path.IsAbs(dir) {
+// 		return path.Clean(dir)
+// 	}
+// 	return path.Join(o.cwd, dir)
+// }
 
 // Exists -
 func (o *TSftp) Exists(path string) error {
-	path = o.resolveDir(path)
+	// path = o.resolveDir(path)
 	_, err := o.client.Stat(path)
 	if err != nil {
 		return err
@@ -34,14 +33,14 @@ func (o *TSftp) Exists(path string) error {
 
 // Delete -
 func (o *TSftp) Delete(path string) error {
-	path = o.resolveDir(path)
+	// path = o.resolveDir(path)
 	return o.client.Remove(path)
 }
 
 // Rename -
 func (o *TSftp) Rename(from, to string) error {
-	from = o.resolveDir(from)
-	to = o.resolveDir(to)
+	// from = o.resolveDir(from)
+	// to = o.resolveDir(to)
 	return o.client.Rename(from, to)
 }
 
@@ -52,7 +51,7 @@ func (o *TSftp) Quit() error {
 
 // FileSize -
 func (o *TSftp) FileSize(path string) (int64, error) {
-	path = o.resolveDir(path)
+	// path = o.resolveDir(path)
 	stat, err := o.client.Stat(path)
 	if err != nil {
 		return -1, err
@@ -66,7 +65,7 @@ func (o *TSftp) StorFrom(path string, r io.Reader, offset uint64) error {
 	// if err != nil {
 	// 	return err
 	// }
-	path = o.resolveDir(path)
+	// path = o.resolveDir(path)
 	f, err := o.client.OpenFile(path, os.O_CREATE|os.O_WRONLY)
 	if err != nil {
 		return err
@@ -90,23 +89,23 @@ func (o *TSftp) StorFrom(path string, r io.Reader, offset uint64) error {
 }
 
 // ChangeDir -
-func (o *TSftp) ChangeDir(dir string) error {
-	err := o.Exists(dir)
-	if err != nil {
-		return fmt.Errorf("%v %q", err, o.resolveDir(dir))
-	}
-	o.cwd = o.resolveDir(dir)
-	return nil
-}
+// func (o *TSftp) ChangeDir(dir string) error {
+// 	err := o.Exists(dir)
+// 	if err != nil {
+// 		return fmt.Errorf("%v %q", err, o.resolveDir(dir))
+// 	}
+// 	o.cwd = o.resolveDir(dir)
+// 	return nil
+// }
 
 // CurrentDir -
-func (o *TSftp) CurrentDir() (string, error) {
-	return o.cwd, nil
-}
+// func (o *TSftp) CurrentDir() (string, error) {
+// 	return o.cwd, nil
+// }
 
 // List -
 func (o *TSftp) List(path string) ([]TEntry, error) {
-	path = o.resolveDir(path)
+	// path = o.resolveDir(path)
 	src, err := o.client.ReadDir(path)
 	if err != nil {
 		return nil, err

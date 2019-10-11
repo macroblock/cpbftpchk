@@ -46,14 +46,14 @@ func (o *TFtp) StorFrom(path string, r io.Reader, offset uint64) error {
 }
 
 // ChangeDir -
-func (o *TFtp) ChangeDir(dir string) error {
-	return o.client.ChangeDir(dir)
-}
+// func (o *TFtp) ChangeDir(dir string) error {
+// 	return o.client.ChangeDir(dir)
+// }
 
-// CurrentDir -
-func (o *TFtp) CurrentDir() (string, error) {
-	return o.client.CurrentDir()
-}
+// // CurrentDir -
+// func (o *TFtp) CurrentDir() (string, error) {
+// 	return o.client.CurrentDir()
+// }
 
 // List -
 func (o *TFtp) List(path string) ([]TEntry, error) {

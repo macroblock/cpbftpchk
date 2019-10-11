@@ -29,7 +29,8 @@ var (
 
 func printStat(opt *xftp.TConnStruct) {
 	log.Warning(true, "<ctrl-q> quit | <ctrl-r> refresh | <ctrl-s> paste")
-	log.Info(fmt.Sprintf("[%v] %v/%v:%v", opt.Proto, opt.Host, opt.Path, opt.Port))
+	log.Info(fmt.Sprintf("[%v] %v%v:%v", opt.Proto, opt.Host, opt.Path, opt.Port))
+	// log.Info(fmt.Sprintf("usr:%v pwd:%v", opt.Username, opt.Password))
 	log.Info("-------------------------------------------------")
 }
 
@@ -78,10 +79,12 @@ func formatEntry(entry *xftp.TEntry) string {
 }
 
 func reloadList(opt *xftp.TConnStruct) {
+	// fmt.Printf("#### path: %q\n", opt.Path)
 	log.Info("reading remote directory...")
 	list, err := ftp.List(opt.Path)
+	// fmt.Println("list: ", list)
 	if err != nil {
-		log.Warning(true, "lost connection")
+		log.Warning(err, "ftp.List()")
 		log.Info("reconnecting...")
 		log.Warning(ftp.Quit(), "ftp.Quit()")
 		ftp, err = xftp.New(*opt)
@@ -145,6 +148,8 @@ func main() {
 	opt, err := xftp.ParseConnString(args)
 	if err != nil {
 		log.Error(err, "xftp.ParseConnString()")
+		log.Warning(true, "format:")
+		log.Warning(true, "    [proto://][username[:password]@]host[/path][:port]")
 		return
 	}
 
@@ -196,12 +201,11 @@ func main() {
 		return true
 	})
 
+	printStat(opt)
 	log.Info("connecting...")
 	ftp, err = xftp.New(*opt)
 	if err != nil {
 		log.Error(err, "xftp.New()")
-		log.Warning(true, "format:")
-		log.Warning(true, "    [proto://][username[:password]@]host[/path][:port]")
 		return
 	}
 	defer ftp.Quit()

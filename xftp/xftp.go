@@ -25,8 +25,8 @@ type IFtp interface {
 	Delete(path string) error
 	Rename(from, to string) error
 	StorFrom(path string, r io.Reader, offset uint64) error
-	ChangeDir(dir string) error
-	CurrentDir() (string, error)
+	// ChangeDir(dir string) error
+	// CurrentDir() (string, error)
 	List(path string) ([]TEntry, error)
 	Quit() error
 }
@@ -92,11 +92,11 @@ func New(cs TConnStruct) (IFtp, error) {
 		c := &TFtp{}
 		c.client = conn
 
-		err = c.ChangeDir(cs.Path)
-		if err != nil {
-			c.Quit()
-			return nil, err
-		}
+		// err = c.ChangeDir(cs.Path)
+		// if err != nil {
+		// 	c.Quit()
+		// 	return nil, err
+		// }
 		return c, nil
 	case "sftp":
 		config := &ssh.ClientConfig{
@@ -134,16 +134,16 @@ func New(cs TConnStruct) (IFtp, error) {
 		c := &TSftp{}
 		c.client = client
 
-		cwd, err := c.client.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		c.cwd = cwd
-		err = c.ChangeDir(cs.Path)
-		if err != nil {
-			c.Quit()
-			return nil, err
-		}
+		// cwd, err := c.client.Getwd()
+		// if err != nil {
+		// return nil, err
+		// }
+		// c.cwd = "/" + cwd
+		// err = c.ChangeDir(cs.Path)
+		// if err != nil {
+		// 	c.Quit()
+		// 	return nil, err
+		// }
 		return c, nil
 	}
 }
@@ -181,6 +181,17 @@ func ParseConnString(conn string) (*TConnStruct, error) {
 		}
 	}
 	// fmt.Printf("proto %q\nuser %q\npswd %q\nhost %q\npath %q\nport %q\n", cs.Proto, cs.Username, cs.Password, cs.Host, cs.Path, cs.Port)
+	if cs.Path != "" {
+		cs.Path = "/" + cs.Path
+	}
+	if cs.Proto == "" {
+		switch cs.Port {
+		case "21":
+			cs.Proto = "ftp"
+		case "22":
+			cs.Proto = "sftp"
+		}
+	}
 	if cs.Port == "" {
 		switch cs.Proto {
 		case "":
@@ -198,7 +209,7 @@ func ParseConnString(conn string) (*TConnStruct, error) {
 	}
 
 	if cs.Password == "" && cs.Username != "" {
-		fmt.Print("Enter Password: ")
+		fmt.Println("Enter Password:")
 		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return nil, err
