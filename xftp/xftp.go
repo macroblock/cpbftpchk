@@ -1,6 +1,7 @@
 package xftp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -37,6 +38,13 @@ type TEntry struct {
 	Size int64
 	Time time.Time
 	Type int
+}
+
+// MarshalJSON -
+func (o TEntry) MarshalJSON() ([]byte, error) {
+	return json.Marshal(
+		[]interface{}{o.Name, o.Size, o.Time, o.Type},
+	)
 }
 
 // -
