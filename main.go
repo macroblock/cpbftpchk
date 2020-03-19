@@ -8,11 +8,10 @@ import (
 
 	"github.com/atotto/clipboard"
 
+	"github.com/macroblock/cpbftpcheck/xftp"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 	"github.com/macroblock/imed/pkg/zlog/zlogger"
 	"github.com/macroblock/rawin"
-
-	"github.com/macroblock/cpbftpchk/xftp"
 )
 
 var (
@@ -137,7 +136,7 @@ func main() {
 	quit := false
 	busy := true
 
-	log.Add(zlogger.Build().Format("~x~e\n").Styler(zlogger.AnsiStyler).Done())
+	log.Add(zlogger.Build().Format("~x~e\n\r").Styler(zlogger.AnsiStyler).Done())
 
 	if len(os.Args) > 1 {
 		args = os.Args[1]

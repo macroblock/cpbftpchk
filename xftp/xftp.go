@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/url"
 	"strings"
 	"syscall"
 	"time"
@@ -76,6 +77,88 @@ func init() {
 		panic(err)
 	}
 	urlParser = p
+}
+
+// New2 -
+func New2(u *url.URL) (IFtp, error) {
+	// cs, err := ParseConnString(conn)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	addr := u.Host //+ ":" + cs.Port
+	uname := u.User.Username()
+	upass, _ := u.User.Password()
+	switch u.Scheme {
+	default:
+		return nil, fmt.Errorf("unsupported protocol %q", u.Scheme)
+	case "ftp":
+		conn, err := ftp.DialTimeout(addr, 5*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		err = conn.Login(uname, upass)
+		if err != nil {
+			return nil, err
+		}
+		c := &TFtp{}
+		c.client = conn
+
+		// err = c.ChangeDir(cs.Path)
+		// if err != nil {
+		// 	c.Quit()
+		// 	return nil, err
+		// }
+		return c, nil
+	case "sftp":
+		config := &ssh.ClientConfig{
+			User: uname,
+			Auth: []ssh.AuthMethod{
+				ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+					// Just send the password back for all questions
+					answers := make([]string, len(questions))
+					for i := range answers {
+						answers[i] = upass
+					}
+					return answers, nil
+				}),
+				ssh.PasswordCallback(func() (string, error) { return upass, nil }),
+				ssh.Password(upass),
+			},
+			// HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				return nil
+			},
+			Timeout: 10 * time.Second,
+			// Config: ssh.Config{
+			// 	//Ciphers: []string{"aes128-cbc"},
+			// 	Ciphers: []string{"3des-cbc", "aes256-cbc", "aes192-cbc", "aes128-cbc"},
+			// },
+		}
+		conn, err := ssh.Dial("tcp", addr, config)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to dial: " + err.Error())
+		}
+		client, err := sftp.NewClient(conn)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create client: " + err.Error())
+		}
+		c := &TSftp{}
+		c.client = client
+
+		// cwd, err := c.client.Getwd()
+		// if err != nil {
+		// return nil, err
+		// }
+		// c.cwd = "/" + cwd
+		// err = c.ChangeDir(cs.Path)
+		// if err != nil {
+		// 	c.Quit()
+		// 	return nil, err
+		// }
+		return c, nil
+	}
+
+	return nil, nil
 }
 
 // New -
