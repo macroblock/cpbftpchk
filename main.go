@@ -8,7 +8,7 @@ import (
 
 	"github.com/atotto/clipboard"
 
-	"github.com/macroblock/cpbftpcheck/xftp"
+	"github.com/macroblock/cpbftpchk/xftp"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 	"github.com/macroblock/imed/pkg/zlog/zlogger"
 	"github.com/macroblock/rawin"
